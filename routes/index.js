@@ -1,0 +1,75 @@
+const { Router } = require("express");
+const authRoutes = require("./auth.routes.js");
+const projectRoutes = require("./project.routes.js");
+const uploadRoutes = require("./upload.routes.js");
+const auth = require("../middleware/auth.js");
+const { restrictTo } = require("../middleware/admin.js");
+const resourceControllers = require("../controllers/resource.controllers.js");
+
+const router = Router();
+
+// ADD THIS ROOT ROUTE HANDLER
+router.get("/", (req, res) => {
+  res.json({
+    success: true,
+    message: "API is working!",
+    version: "1.0.0",
+    endpoints: {
+      auth: "/api/auth",
+      projects: "/api/projects",
+      upload: "/api/upload",
+      achievements: "/api/achievements",
+      blogs: "/api/blogs",
+      certifications: "/api/certifications",
+      education: "/api/education",
+      experience: "/api/experience",
+      personalInfo: "/api/personal-info",
+      skills: "/api/skills",
+      socialLinks: "/api/social-links",
+      stats: "/api/stats",
+      testimonials: "/api/testimonials",
+      portfolio: "/api/portfolio"
+    }
+  });
+});
+
+// Auth routes
+router.use("/auth", authRoutes);
+router.use("/upload", uploadRoutes);
+
+// Portfolio public route
+router.get("/portfolio", resourceControllers.getFullPortfolio);
+
+// Resource Routes Helper
+const registerResourceRoutes = (path, pluralPrefix, singularPrefix) => {
+  const getAll = resourceControllers[`getAll${pluralPrefix}`];
+  const getOne = resourceControllers[`get${singularPrefix}`];
+  const create = resourceControllers[`create${singularPrefix}`];
+  const update = resourceControllers[`update${singularPrefix}`];
+  const remove = resourceControllers[`delete${singularPrefix}`];
+
+  router.route(`/${path}`)
+    .get(getAll)
+    .post(auth, restrictTo("super_admin", "admin"), create);
+
+  router.route(`/${path}/:id`)
+    .get(getOne)
+    .patch(auth, restrictTo("super_admin", "admin"), update)
+    .delete(auth, restrictTo("super_admin", "admin"), remove);
+};
+
+// Register all resources
+router.use("/projects", projectRoutes); // Already has custom file
+registerResourceRoutes("achievements", "Achievements", "Achievement");
+registerResourceRoutes("blogs", "Blogs", "Blog");
+registerResourceRoutes("certifications", "Certifications", "Certification");
+registerResourceRoutes("education", "Education", "Education");
+registerResourceRoutes("experience", "Experience", "Experience");
+registerResourceRoutes("personal-info", "PersonalInfo", "PersonalInfo");
+// projects handled via projectRoutes above
+registerResourceRoutes("skills", "Skills", "Skill");
+registerResourceRoutes("social-links", "SocialLinks", "SocialLink");
+registerResourceRoutes("stats", "Stats", "Stat");
+registerResourceRoutes("testimonials", "Testimonials", "Testimonial");
+
+module.exports = router;
