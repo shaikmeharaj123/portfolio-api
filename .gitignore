@@ -43,3 +43,8 @@ next-env.d.ts
 
 # Ignore zip files
 *.zip
+
+
+# Firebase service account
+*-firebase-adminsdk-*.json
+*.json
