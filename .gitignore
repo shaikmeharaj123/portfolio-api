@@ -45,6 +45,4 @@ next-env.d.ts
 *.zip
 
 
-# Firebase service account
 *-firebase-adminsdk-*.json
-*.json
