@@ -15,6 +15,31 @@ class PortfolioService {
     return await Model.find(query).sort({ order: 1, createdAt: -1 });
   }
 
+  async getLatestUpdatedAt() {
+    const models = [
+      PersonalInfo,
+      Project,
+      Skill,
+      Experience,
+      Education,
+      Blog,
+      Achievement,
+      Certification,
+      SocialLink,
+      Stat,
+      Testimonial,
+    ];
+
+    const timestamps = await Promise.all(
+      models.map(async (Model) => {
+        const doc = await Model.findOne().sort({ updatedAt: -1 }).select("updatedAt");
+        return doc?.updatedAt ? new Date(doc.updatedAt).getTime() : 0;
+      })
+    );
+
+    return Math.max(...timestamps);
+  }
+
   async getAllPortfolioData() {
     const [
       personalInfo,
@@ -54,6 +79,16 @@ class PortfolioService {
       socialLinks,
       stats,
       testimonials
+    };
+  }
+
+  async getPortfolioMeta() {
+    const lastUpdatedAt = await this.getLatestUpdatedAt();
+
+    return {
+      version: lastUpdatedAt ? new Date(lastUpdatedAt).toISOString() : null,
+      lastUpdatedAt: lastUpdatedAt ? new Date(lastUpdatedAt).toISOString() : null,
+      generatedAt: new Date().toISOString(),
     };
   }
 }

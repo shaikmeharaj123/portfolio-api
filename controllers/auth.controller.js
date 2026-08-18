@@ -1,7 +1,12 @@
 const authService = require("../services/auth.service.js");
 const asyncHandler = require("../middleware/asyncHandler.js");
 const ApiResponse = require("../utils/ApiResponse.js");
+const ApiError = require("../utils/ApiError.js");
 const sendToken = require("../utils/sendToken.js");
+const {
+  registerAdminToken,
+  removeAdminToken,
+} = require("../services/fcm.service.js");
 
 exports.register = asyncHandler(async (req, res) => {
   const admin = await authService.register(req.body);
@@ -35,4 +40,36 @@ exports.refreshAccessToken = asyncHandler(async (req, res) => {
 
 exports.getMe = asyncHandler(async (req, res) => {
   res.status(200).json(new ApiResponse(200, "Admin profile fetched successfully", req.admin));
+});
+
+exports.registerPushToken = asyncHandler(async (req, res) => {
+  const { token } = req.body;
+
+  if (!token) {
+    throw new ApiError(400, "Push token is required");
+  }
+
+  await registerAdminToken(req.admin._id, token);
+
+  res.status(200).json(
+    new ApiResponse(200, "Push token registered successfully", {
+      token,
+    })
+  );
+});
+
+exports.removePushToken = asyncHandler(async (req, res) => {
+  const { token } = req.body;
+
+  if (!token) {
+    throw new ApiError(400, "Push token is required");
+  }
+
+  await removeAdminToken(req.admin._id, token);
+
+  res.status(200).json(
+    new ApiResponse(200, "Push token removed successfully", {
+      token,
+    })
+  );
 });

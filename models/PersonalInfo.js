@@ -52,6 +52,36 @@ const personalInfoSchema = new mongoose.Schema(
       default: "",
     },
 
+    resumeName: {
+      type: String,
+      default: "",
+      trim: true,
+    },
+
+    seoTitle: {
+      type: String,
+      trim: true,
+      default: "",
+    },
+
+    seoDescription: {
+      type: String,
+      trim: true,
+      default: "",
+    },
+
+    seoKeywords: {
+      type: String,
+      trim: true,
+      default: "",
+    },
+
+    ogImage: {
+      type: String,
+      trim: true,
+      default: "",
+    },
+
     isAvailable: {
       type: Boolean,
       default: true,

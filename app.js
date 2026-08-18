@@ -10,40 +10,52 @@ const routes = require("./routes/index.js");
 const app = express();
 
 const getClientUrls = () => {
-  const clientUrl = process.env.CLIENT_URL;
-  if (!clientUrl) {
-    return ['http://localhost:5173', 'http://localhost:5175']; // defaults
-  }
+  const configuredUrls = [
+    process.env.CLIENT_URL,
+    process.env.PUBLIC_CLIENT_URL,
+    process.env.FRONTEND_URL,
+    process.env.WEBSITE_URL,
+  ]
+    .filter(Boolean)
+    .flatMap((value) => value.split(","))
+    .map((url) => url.trim())
+    .filter(Boolean);
 
-  if (clientUrl.includes(',')) {
-    return clientUrl.split(',').map(url => url.trim());
-  }
-
-  return [clientUrl];
+  const defaults = [
+    "http://localhost:5173",
+    "http://localhost:5175",
+    "http://localhost:5174",
+    "https://shaikadmin.netlify.app",
+    "https://shaikmeharaj.netlify.app",
+  ];
+  return [...new Set([...configuredUrls, ...defaults])];
 };
-
 
 // Security Middlewares
 app.use(helmet());
 const clientUrls = getClientUrls();
 
-app.use(cors({
-  origin: function (origin, callback) {
-    // Allow requests with no origin (like mobile apps or curl requests)
-    if (!origin) return callback(null, true);
+app.use(
+  cors({
+    origin: function (origin, callback) {
+      if (!origin) return callback(null, true);
 
-    // Check if the origin is in the allowed list
-    if (clientUrls.indexOf(origin) !== -1) {
-      callback(null, true);
-    } else {
-      callback(new Error('Not allowed by CORS'));
-    }
-  },
-  credentials: true,
-  methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS'],
-  allowedHeaders: ['Content-Type', 'Authorization', 'Cookie'],
-  exposedHeaders: ['Set-Cookie']
-}));
+      if (clientUrls.indexOf(origin) !== -1) {
+        callback(null, true);
+      } else {
+        callback(new Error("Not allowed by CORS"));
+      }
+    },
+    credentials: true,
+    methods: ["GET", "POST", "PUT", "DELETE", "PATCH", "OPTIONS"],
+    allowedHeaders: ["Content-Type", "Authorization", "Cookie"],
+    exposedHeaders: ["Set-Cookie"],
+  }),
+);
+///  exposedHeaders: ['Set-Cookie']
+/// ));
+edHeaders: ["Set-Cookie"];
+// }));
 
 // Logging
 if (process.env.NODE_ENV === "development") {

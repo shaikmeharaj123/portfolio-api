@@ -40,6 +40,12 @@ const adminSchema = new mongoose.Schema(
       default: true,
     },
 
+    fcmTokens: {
+      type: [String],
+      default: [],
+      select: false,
+    },
+
     lastLogin: Date,
   },
   {

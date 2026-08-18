@@ -20,6 +20,11 @@ exports.getFullPortfolio = asyncHandler(async (req, res) => {
   res.status(200).json(new ApiResponse(200, "Portfolio data fetched successfully", data));
 });
 
+exports.getPortfolioMeta = asyncHandler(async (req, res) => {
+  const data = await portfolioService.getPortfolioMeta();
+  res.status(200).json(new ApiResponse(200, "Portfolio meta fetched successfully", data));
+});
+
 // Achievement
 exports.createAchievement = factory.createOne(Achievement);
 exports.updateAchievement = factory.updateOne(Achievement);

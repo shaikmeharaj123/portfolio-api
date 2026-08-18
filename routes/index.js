@@ -1,6 +1,8 @@
 const { Router } = require("express");
 const authRoutes = require("./auth.routes.js");
 const projectRoutes = require("./project.routes.js");
+const contactRoutes = require("./contact.routes.js");
+const notificationRoutes = require("./notification.routes.js");
 const uploadRoutes = require("./upload.routes.js");
 const auth = require("../middleware/auth.js");
 const { restrictTo } = require("../middleware/admin.js");
@@ -28,6 +30,8 @@ router.get("/", (req, res) => {
       socialLinks: "/api/social-links",
       stats: "/api/stats",
       testimonials: "/api/testimonials",
+      contacts: "/api/contacts",
+      notifications: "/api/notifications",
       portfolio: "/api/portfolio"
     }
   });
@@ -36,9 +40,12 @@ router.get("/", (req, res) => {
 // Auth routes
 router.use("/auth", authRoutes);
 router.use("/upload", uploadRoutes);
+router.use("/contacts", contactRoutes);
+router.use("/notifications", notificationRoutes);
 
 // Portfolio public route
 router.get("/portfolio", resourceControllers.getFullPortfolio);
+router.get("/portfolio/meta", resourceControllers.getPortfolioMeta);
 
 // Resource Routes Helper
 const registerResourceRoutes = (path, pluralPrefix, singularPrefix) => {
