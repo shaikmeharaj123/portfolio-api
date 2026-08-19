@@ -12,6 +12,11 @@ const fileFilter = (req, file, cb) => {
   ];
 
   if (allowedMimeTypes.includes(file.mimetype)) {
+    // Additional PDF validation
+    if (file.mimetype === "application/pdf" && file.size > 20 * 1024 * 1024) {
+      cb(new Error("PDF files must be under 20MB"), false);
+      return;
+    }
     cb(null, true);
   } else {
     cb(new Error("Only JPG, PNG, WEBP and PDF files are allowed."), false);

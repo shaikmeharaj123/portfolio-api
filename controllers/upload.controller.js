@@ -5,11 +5,25 @@ const cloudinaryUpload = require("../utils/cloudinaryUpload.js");
 
 const buildDownloadUrl = (url, originalName) => {
   if (!url) return url;
-  if (url.includes("fl_attachment:")) return url;
-  if (!url.includes("/upload/")) return url;
-
-  const attachmentName = encodeURIComponent(originalName || "download");
-  return url.replace("/upload/", `/upload/fl_attachment:${attachmentName}/`);
+  
+  // For PDFs, create a forced download URL
+  const isPdf = originalName?.toLowerCase().endsWith('.pdf');
+  
+  if (isPdf) {
+    // Extract the public ID from the URL
+    const publicIdMatch = url.match(/\/upload\/(?:v\d+\/)?(.+?)\./);
+    if (publicIdMatch) {
+      const publicId = publicIdMatch[1];
+      const encodedName = encodeURIComponent(originalName);
+      // Create download URL with proper flags
+      return url.replace(
+        '/upload/',
+        `/upload/fl_attachment:${encodedName}/`
+      );
+    }
+  }
+  
+  return url;
 };
 
 exports.uploadSingle = asyncHandler(async (req, res) => {

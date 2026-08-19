@@ -32,23 +32,38 @@ const cloudinaryUpload = async (
   try {
     ensureCloudinaryConfigured();
 
+    const isPdf = mimeType === "application/pdf";
+    
     console.log("[cloudinaryUpload] starting upload:", {
       folder,
       mimeType,
       originalName,
       size: fileBuffer?.length,
-      resourceType: mimeType === "application/pdf" ? "raw" : "auto",
+      resourceType: isPdf ? "raw" : "auto",
     });
+
+    // For PDFs, we need to use a different approach
+    let uploadOptions = {
+      folder,
+      resource_type: isPdf ? "raw" : "auto",
+      use_filename: true,
+    };
+
+    if (isPdf) {
+      // For PDFs, use public_id to control the name
+      const baseName = originalName.replace(/\.[^/.]+$/, ""); // Remove extension
+      const sanitizedName = baseName.replace(/[^a-zA-Z0-9_-]/g, "_");
+      uploadOptions.public_id = `${folder}/${sanitizedName}`;
+      uploadOptions.unique_filename = false;
+    } else {
+      // For images, allow unique filenames
+      uploadOptions.unique_filename = true;
+      uploadOptions.filename_override = originalName || undefined;
+    }
 
     const result = await new Promise((resolve, reject) => {
       const stream = cloudinary.uploader.upload_stream(
-        {
-          folder,
-          resource_type: mimeType === "application/pdf" ? "raw" : "auto",
-          use_filename: true,
-          unique_filename: mimeType === "application/pdf" ? false : true,
-          filename_override: originalName || undefined,
-        },
+        uploadOptions,
         (error, uploadedResult) => {
           if (error) {
             console.error("[cloudinaryUpload] cloudinary error:", {
