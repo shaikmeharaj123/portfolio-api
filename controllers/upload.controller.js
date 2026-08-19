@@ -3,27 +3,28 @@ const ApiResponse = require("../utils/ApiResponse.js");
 const ApiError = require("../utils/ApiError.js");
 const cloudinaryUpload = require("../utils/cloudinaryUpload.js");
 
-const buildDownloadUrl = (url, originalName) => {
-  if (!url) return url;
-  
-  // For PDFs, create a forced download URL
-  const isPdf = originalName?.toLowerCase().endsWith('.pdf');
-  
-  if (isPdf) {
-    // Extract the public ID from the URL
-    const publicIdMatch = url.match(/\/upload\/(?:v\d+\/)?(.+?)\./);
-    if (publicIdMatch) {
-      const publicId = publicIdMatch[1];
-      const encodedName = encodeURIComponent(originalName);
-      // Create download URL with proper flags
-      return url.replace(
-        '/upload/',
-        `/upload/fl_attachment:${encodedName}/`
-      );
-    }
-  }
-  
-  return url;
+const isPdfFile = (file) =>
+  file?.mimetype === "application/pdf" ||
+  file?.originalname?.toLowerCase().endsWith(".pdf");
+
+const buildDownloadUrl = (url) => url;
+
+const formatUploadResult = (result, file) => {
+  const originalName = file.originalname || "download";
+  const isPdf = isPdfFile(file);
+
+  return {
+    // The Cloudinary helper must include .pdf in the raw public_id.
+    url: result.secure_url,
+    downloadUrl: isPdf
+      ? buildDownloadUrl(result.secure_url, originalName)
+      : result.secure_url,
+    originalName,
+    publicId: result.public_id,
+    format: result.format,
+    resourceType: result.resource_type,
+    bytes: result.bytes,
+  };
 };
 
 exports.uploadSingle = asyncHandler(async (req, res) => {
@@ -33,6 +34,7 @@ exports.uploadSingle = asyncHandler(async (req, res) => {
 
   const folder = req.body.folder || "portfolio";
   const originalName = req.file.originalname || "download";
+
   console.log("[uploadSingle] incoming file:", {
     originalName,
     mimetype: req.file.mimetype,
@@ -44,22 +46,13 @@ exports.uploadSingle = asyncHandler(async (req, res) => {
     req.file.buffer,
     folder,
     req.file.mimetype,
-    originalName
+    originalName,
   );
-  const downloadUrl =
-    req.file.mimetype === "application/pdf"
-      ? buildDownloadUrl(result.secure_url, originalName)
-      : result.secure_url;
 
   res.status(200).json(
     new ApiResponse(200, "File uploaded successfully", {
-      url: result.secure_url,
-      downloadUrl,
-      originalName,
-      publicId: result.public_id,
-      format: result.format,
-      bytes: result.bytes,
-    })
+      ...formatUploadResult(result, req.file),
+    }),
   );
 });
 
@@ -69,35 +62,27 @@ exports.uploadMultiple = asyncHandler(async (req, res) => {
   }
 
   const folder = req.body.folder || "portfolio";
-  console.log("[uploadMultiple] incoming files:", req.files.map((file) => ({
-    originalName: file.originalname,
-    mimetype: file.mimetype,
-    size: file.size,
-  })));
-  
-  const uploadPromises = req.files.map((file) =>
-    cloudinaryUpload(file.buffer, folder, file.mimetype, file.originalname)
+
+  console.log(
+    "[uploadMultiple] incoming files:",
+    req.files.map((file) => ({
+      originalName: file.originalname,
+      mimetype: file.mimetype,
+      size: file.size,
+    })),
   );
 
-  const results = await Promise.all(uploadPromises);
-
-  const uploadedFiles = results.map((result, index) => {
-    const file = req.files[index];
-    const originalName = file.originalname || "download";
-    return {
-      url: result.secure_url,
-      downloadUrl:
-        file.mimetype === "application/pdf"
-          ? buildDownloadUrl(result.secure_url, originalName)
-          : result.secure_url,
-      originalName,
-      publicId: result.public_id,
-      format: result.format,
-      bytes: result.bytes,
-    };
-  });
-
-  res.status(200).json(
-    new ApiResponse(200, "Files uploaded successfully", uploadedFiles)
+  const results = await Promise.all(
+    req.files.map((file) =>
+      cloudinaryUpload(file.buffer, folder, file.mimetype, file.originalname),
+    ),
   );
+
+  const uploadedFiles = results.map((result, index) =>
+    formatUploadResult(result, req.files[index]),
+  );
+
+  res
+    .status(200)
+    .json(new ApiResponse(200, "Files uploaded successfully", uploadedFiles));
 });
