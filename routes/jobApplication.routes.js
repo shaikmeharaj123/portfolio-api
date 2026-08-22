@@ -1,0 +1,11 @@
+const { Router } = require("express");
+const auth = require("../middleware/auth.js");
+const { restrictTo } = require("../middleware/admin.js");
+const controller = require("../controllers/jobApplication.controller.js");
+const router = Router();
+const adminOnly = [auth, restrictTo("super_admin", "admin")];
+router.route("/").get(...adminOnly, controller.getApplications).post(...adminOnly, controller.createApplication);
+router.route("/:id").get(...adminOnly, controller.getApplication).put(...adminOnly, controller.updateApplication).patch(...adminOnly, controller.updateApplication).delete(...adminOnly, controller.deleteApplication);
+router.patch("/:id/status", ...adminOnly, controller.updateStatus);
+router.get("/:id/timeline", ...adminOnly, controller.getTimeline);
+module.exports = router;

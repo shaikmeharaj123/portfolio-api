@@ -46,7 +46,14 @@ class AuthService {
       revoked: false,
     });
 
-    if (!tokenDoc || tokenDoc.expiresAt < Date.now()) {
+    if (!tokenDoc) {
+      throw new ApiError(401, "Invalid or expired refresh token");
+    }
+
+    if (tokenDoc.expiresAt < Date.now()) {
+      tokenDoc.revoked = true;
+      tokenDoc.revokedAt = Date.now();
+      await tokenDoc.save();
       throw new ApiError(401, "Invalid or expired refresh token");
     }
 

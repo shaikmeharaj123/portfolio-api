@@ -4,6 +4,12 @@ const projectRoutes = require("./project.routes.js");
 const contactRoutes = require("./contact.routes.js");
 const notificationRoutes = require("./notification.routes.js");
 const uploadRoutes = require("./upload.routes.js");
+const appliedCompanyRoutes = require("./appliedCompany.routes.js");
+const ocrInterviewQuestionRoutes = require("./ocrInterviewQuestion.routes.js");
+const gmailRoutes = require("./gmail.routes.js");
+const jobApplicationRoutes = require("./jobApplication.routes.js");
+const jobAutomationRoutes = require("./jobAutomation.routes.js");
+
 const auth = require("../middleware/auth.js");
 const { restrictTo } = require("../middleware/admin.js");
 const resourceControllers = require("../controllers/resource.controllers.js");
@@ -31,8 +37,14 @@ router.get("/", (req, res) => {
       stats: "/api/stats",
       testimonials: "/api/testimonials",
       contacts: "/api/contacts",
-      notifications: "/api/notifications",
+            notifications: "/api/notifications",
+      appliedCompanies: "/api/applied-companies",
+      ocrInterviewQuestions: "/api/ocr-interview-questions",
+      gmail: "/api/gmail",
+      jobApplications: "/api/job-applications",
+      jobAutomation: "/api/job-automation",
       portfolio: "/api/portfolio"
+
     }
   });
 });
@@ -42,6 +54,11 @@ router.use("/auth", authRoutes);
 router.use("/upload", uploadRoutes);
 router.use("/contacts", contactRoutes);
 router.use("/notifications", notificationRoutes);
+router.use("/applied-companies", appliedCompanyRoutes);
+router.use("/ocr-interview-questions", ocrInterviewQuestionRoutes);
+router.use("/gmail", gmailRoutes);
+router.use("/job-applications", jobApplicationRoutes);
+router.use("/job-automation", jobAutomationRoutes);
 
 // Portfolio public route
 router.get("/portfolio", resourceControllers.getFullPortfolio);

@@ -1,5 +1,10 @@
 const errorHandler = (err, req, res, next) => {
-  console.error(err);
+  const expectedAuthFailure = (err.statusCode || 500) === 401;
+  if (expectedAuthFailure) {
+    console.warn(`[AUTH] ${req.method} ${req.originalUrl}: ${err.message}`);
+  } else {
+    console.error(err);
+  }
 
   let statusCode = err.statusCode || 500;
   let message = err.message || "Internal Server Error";
