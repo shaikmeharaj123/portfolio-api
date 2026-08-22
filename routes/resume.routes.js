@@ -1,0 +1,12 @@
+const { Router } = require("express");
+const auth = require("../middleware/auth.js");
+const { restrictTo } = require("../middleware/admin.js");
+const controller = require("../controllers/resume.controller.js");
+const router = Router();
+const protectedAdmin = [auth, restrictTo("super_admin", "admin")];
+router.get("/", ...protectedAdmin, controller.list);
+router.post("/", ...protectedAdmin, controller.create);
+router.patch("/:id", ...protectedAdmin, controller.update);
+router.delete("/:id", ...protectedAdmin, controller.remove);
+router.patch("/:id/default", ...protectedAdmin, controller.setDefault);
+module.exports = router;

@@ -35,6 +35,7 @@ const optionalUrl = {
 
 const appliedCompanySchema = new mongoose.Schema(
   {
+    admin: { type: mongoose.Schema.Types.ObjectId, ref: "Admin", index: true },
     companyName: { type: String, required: true, trim: true, maxlength: 150 },
     companyLogo: optionalUrl,
     jobTitle: { type: String, required: true, trim: true, maxlength: 200 },
@@ -54,6 +55,11 @@ const appliedCompanySchema = new mongoose.Schema(
     status: { type: String, enum: STATUS_VALUES, default: "Applied" },
     applicationSource: { type: String, trim: true, maxlength: 120, default: "" },
     recruiterName: { type: String, trim: true, maxlength: 150, default: "" },
+    recruiterMobile: { type: String, trim: true, maxlength: 50, default: "" },
+    recruiterDesignation: { type: String, trim: true, maxlength: 150, default: "" },
+    recruiterCompany: { type: String, trim: true, maxlength: 150, default: "" },
+    recruiterLinkedIn: optionalUrl,
+    recruiterNotes: { type: String, trim: true, maxlength: 2000, default: "" },
     recruiterEmail: {
       type: String,
       trim: true,
@@ -68,6 +74,8 @@ const appliedCompanySchema = new mongoose.Schema(
     interviewRound: { type: String, trim: true, maxlength: 120, default: "" },
     followUpDate: { type: Date },
     notes: { type: String, trim: true, maxlength: 5000, default: "" },
+    resumeId: { type: mongoose.Schema.Types.ObjectId, ref: "Resume" },
+    resumeName: { type: String, trim: true, maxlength: 200, default: "" },
     rejectionReason: { type: String, trim: true, maxlength: 1000, default: "" },
     offerDetails: { type: mongoose.Schema.Types.Mixed, default: {} },
   },
@@ -76,6 +84,7 @@ const appliedCompanySchema = new mongoose.Schema(
 
 appliedCompanySchema.index({ status: 1, appliedDate: -1 });
 appliedCompanySchema.index({ companyName: 1, jobTitle: 1 });
+appliedCompanySchema.index({ admin: 1, companyName: 1, jobTitle: 1, jobUrl: 1 });
 appliedCompanySchema.index({ location: 1, workMode: 1 });
 
 appliedCompanySchema.statics.statusValues = STATUS_VALUES;

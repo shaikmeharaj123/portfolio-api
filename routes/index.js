@@ -9,6 +9,7 @@ const ocrInterviewQuestionRoutes = require("./ocrInterviewQuestion.routes.js");
 const gmailRoutes = require("./gmail.routes.js");
 const jobApplicationRoutes = require("./jobApplication.routes.js");
 const jobAutomationRoutes = require("./jobAutomation.routes.js");
+const resumeRoutes = require("./resume.routes.js");
 
 const auth = require("../middleware/auth.js");
 const { restrictTo } = require("../middleware/admin.js");
@@ -43,6 +44,7 @@ router.get("/", (req, res) => {
       gmail: "/api/gmail",
       jobApplications: "/api/job-applications",
       jobAutomation: "/api/job-automation",
+      resumes: "/api/resumes",
       portfolio: "/api/portfolio"
 
     }
@@ -59,6 +61,7 @@ router.use("/ocr-interview-questions", ocrInterviewQuestionRoutes);
 router.use("/gmail", gmailRoutes);
 router.use("/job-applications", jobApplicationRoutes);
 router.use("/job-automation", jobAutomationRoutes);
+router.use("/resumes", resumeRoutes);
 
 // Portfolio public route
 router.get("/portfolio", resourceControllers.getFullPortfolio);
