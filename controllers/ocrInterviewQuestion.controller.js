@@ -14,6 +14,7 @@ const validateQuestionAnswer = ({ question, answer }) => {
   if (!question || !answer) throw new ApiError(400, "Question and answer are required.");
 };
 const escapeRegex = (value) => String(value).replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+const getRootFilter = async (filter) => { const assignedIds = await OCRFolder.distinct("questionIds"); return { ...filter, _id: { $nin: assignedIds } }; };
 
 exports.createOCRInterviewQuestion = asyncHandler(async (req, res) => {
   const data = pickQuestionAnswer(req.body);
@@ -36,9 +37,10 @@ exports.getOCRInterviewQuestions = asyncHandler(async (req, res) => {
   const { page, limit, skip } = getPagination(req);
   const search = String(req.query.search || "").trim();
   const filter = search ? { $or: [{ question: { $regex: escapeRegex(search), $options: "i" } }, { answer: { $regex: escapeRegex(search), $options: "i" } }] } : {};
+  const rootFilter = await getRootFilter(filter);
   const [docs, total] = await Promise.all([
-    OCRInterviewQuestion.find(filter).sort({ createdAt: -1 }).skip(skip).limit(limit),
-    OCRInterviewQuestion.countDocuments(filter),
+    OCRInterviewQuestion.find(rootFilter).sort({ createdAt: -1 }).skip(skip).limit(limit),
+    OCRInterviewQuestion.countDocuments(rootFilter),
   ]);
   res.status(200).json(new ApiResponse(200, "Question-answer records fetched successfully", { docs, total, page, limit, pages: Math.ceil(total / limit) }));
 });
@@ -46,7 +48,8 @@ exports.getOCRInterviewQuestions = asyncHandler(async (req, res) => {
 exports.getOCRInterviewQuestionIds = asyncHandler(async (req, res) => {
   const search = String(req.query.search || "").trim();
   const filter = search ? { $or: [{ question: { $regex: escapeRegex(search), $options: "i" } }, { answer: { $regex: escapeRegex(search), $options: "i" } }] } : {};
-  const ids = await OCRInterviewQuestion.find(filter).select("_id").lean();
+  const rootFilter = await getRootFilter(filter);
+  const ids = await OCRInterviewQuestion.find(rootFilter).select("_id").lean();
   res.status(200).json(new ApiResponse(200, "Question-answer IDs fetched successfully", ids.map((item) => item._id)));
 });
 
