@@ -9,6 +9,7 @@ router.post("/bulk-delete", ...adminOnly, controller.bulkDelete);
 router.get("/drafts", ...adminOnly, controller.getDrafts);
 router.post("/analyze", ...adminOnly, controller.analyzeJobDescription);
 router.get("/profile", ...adminOnly, controller.getProfile);
+router.get("/ids", ...adminOnly, controller.getApplicationIds);
 router.route("/:id").get(...adminOnly, controller.getApplication).put(...adminOnly, controller.updateApplication).patch(...adminOnly, controller.updateApplication).delete(...adminOnly, controller.deleteApplication);
 router.patch("/:id/status", ...adminOnly, controller.updateStatus);
 router.post("/:id/mark-applied", ...adminOnly, controller.markApplied);
