@@ -49,3 +49,4 @@ next-env.d.ts
 
 *-firebase-adminsdk-*.json
 *firebase.json.env
+firebase.json
