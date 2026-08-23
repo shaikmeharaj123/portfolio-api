@@ -19,7 +19,13 @@ exports.connect = asyncHandler(async (req, res) => {
   const state = makeState(req.admin._id, req.query.accountLabel);
   res.cookie("gmailOAuthState", state, { httpOnly: true, secure: isProduction, sameSite: isProduction ? "none" : "lax", maxAge: 10 * 60 * 1000 });
   console.log("[GMAIL] redirecting to Google OAuth");
-  res.redirect(gmailService.getAuthUrl(state));
+  const authUrl = gmailService.getAuthUrl(state);
+
+  if (req.accepts("json")) {
+    return res.json(new ApiResponse(200, "Gmail OAuth URL generated", { authUrl }));
+  }
+
+  return res.redirect(authUrl);
 });
 
 exports.callback = asyncHandler(async (req, res) => {
