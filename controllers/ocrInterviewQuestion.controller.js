@@ -1,4 +1,6 @@
 const OCRInterviewQuestion = require("../models/OCRInterviewQuestion.js");
+const OCRFolder = require("../models/OCRFolder.js");
+const OCRFavorite = require("../models/OCRFavorite.js");
 const asyncHandler = require("../middleware/asyncHandler.js");
 const ApiResponse = require("../utils/ApiResponse.js");
 const ApiError = require("../utils/ApiError.js");
@@ -33,6 +35,24 @@ exports.getOCRInterviewQuestions = asyncHandler(async (req, res) => {
     OCRInterviewQuestion.countDocuments(filter),
   ]);
   res.status(200).json(new ApiResponse(200, "Question-answer records fetched successfully", { docs, total, page, limit, pages: Math.ceil(total / limit) }));
+});
+
+exports.getOCRInterviewQuestionIds = asyncHandler(async (req, res) => {
+  const search = String(req.query.search || "").trim();
+  const filter = search ? { $or: [{ question: { $regex: escapeRegex(search), $options: "i" } }, { answer: { $regex: escapeRegex(search), $options: "i" } }] } : {};
+  const ids = await OCRInterviewQuestion.find(filter).select("_id").lean();
+  res.status(200).json(new ApiResponse(200, "Question-answer IDs fetched successfully", ids.map((item) => item._id)));
+});
+
+exports.bulkDeleteOCRInterviewQuestions = asyncHandler(async (req, res) => {
+  const ids = Array.isArray(req.body?.ids) ? [...new Set(req.body.ids.filter((id) => /^[a-f\\d]{24}$/i.test(String(id))))] : [];
+  if (!ids.length) throw new ApiError(400, "Select at least one question-answer record");
+  const result = await OCRInterviewQuestion.deleteMany({ _id: { $in: ids } });
+  await Promise.all([
+    OCRFolder.updateMany({ questionIds: { $in: ids } }, { $pull: { questionIds: { $in: ids } } }),
+    OCRFavorite.deleteMany({ favoriteType: "question", questionId: { $in: ids } }),
+  ]);
+  res.status(200).json(new ApiResponse(200, "Question-answer records deleted successfully", { requested: ids.length, deleted: result.deletedCount }));
 });
 
 exports.getOCRInterviewQuestion = asyncHandler(async (req, res) => {

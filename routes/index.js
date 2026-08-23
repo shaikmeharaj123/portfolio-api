@@ -6,6 +6,7 @@ const notificationRoutes = require("./notification.routes.js");
 const uploadRoutes = require("./upload.routes.js");
 const appliedCompanyRoutes = require("./appliedCompany.routes.js");
 const ocrInterviewQuestionRoutes = require("./ocrInterviewQuestion.routes.js");
+const ocrFolderRoutes = require("./ocrFolder.routes.js");
 const gmailRoutes = require("./gmail.routes.js");
 const jobApplicationRoutes = require("./jobApplication.routes.js");
 const jobAutomationRoutes = require("./jobAutomation.routes.js");
@@ -41,6 +42,7 @@ router.get("/", (req, res) => {
             notifications: "/api/notifications",
       appliedCompanies: "/api/applied-companies",
       ocrInterviewQuestions: "/api/ocr-interview-questions",
+      ocrFolders: "/api/ocr-folders",
       gmail: "/api/gmail",
       jobApplications: "/api/job-applications",
       jobAutomation: "/api/job-automation",
@@ -58,6 +60,7 @@ router.use("/contacts", contactRoutes);
 router.use("/notifications", notificationRoutes);
 router.use("/applied-companies", appliedCompanyRoutes);
 router.use("/ocr-interview-questions", ocrInterviewQuestionRoutes);
+router.use("/ocr-folders", ocrFolderRoutes);
 router.use("/gmail", gmailRoutes);
 router.use("/job-applications", jobApplicationRoutes);
 router.use("/job-automation", jobAutomationRoutes);
