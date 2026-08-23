@@ -17,12 +17,18 @@ const escapeRegex = (value) => String(value).replace(/[.*+?^${}()|[\]\\]/g, "\\$
 
 exports.createOCRInterviewQuestion = asyncHandler(async (req, res) => {
   const data = pickQuestionAnswer(req.body);
+  const folderId = req.body?.folderId;
   validateQuestionAnswer(data);
+  if (!folderId) throw new ApiError(400, "Select an OCR folder before saving.");
+  const folder = await OCRFolder.findById(folderId);
+  if (!folder) throw new ApiError(404, "OCR folder not found");
   const duplicate = await OCRInterviewQuestion.findOne({ question: data.question, answer: data.answer });
   if (duplicate && req.query.allowDuplicate !== "true") {
     return res.status(409).json({ success: false, statusCode: 409, message: "This question and answer already exists.", data: { match: duplicate } });
   }
   const doc = await OCRInterviewQuestion.create(data);
+  folder.questionIds.push(doc._id);
+  await folder.save();
   res.status(201).json(new ApiResponse(201, "Question-answer record created successfully", doc));
 });
 
@@ -76,8 +82,14 @@ exports.deleteOCRInterviewQuestion = asyncHandler(async (req, res) => {
 });
 
 exports.duplicateOCRInterviewQuestion = asyncHandler(async (req, res) => {
+  const folderId = req.body?.folderId;
+  if (!folderId) throw new ApiError(400, "Select an OCR folder before saving.");
+  const folder = await OCRFolder.findById(folderId);
+  if (!folder) throw new ApiError(404, "OCR folder not found");
   const source = await OCRInterviewQuestion.findById(req.params.id).lean();
   if (!source) throw new ApiError(404, "Question-answer record not found");
   const duplicate = await OCRInterviewQuestion.create({ question: source.question, answer: source.answer });
+  folder.questionIds.push(duplicate._id);
+  await folder.save();
   res.status(201).json(new ApiResponse(201, "Question-answer record duplicated successfully", duplicate));
 });
