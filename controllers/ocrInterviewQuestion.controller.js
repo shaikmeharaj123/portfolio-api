@@ -4,62 +4,60 @@ const ApiResponse = require("../utils/ApiResponse.js");
 const ApiError = require("../utils/ApiError.js");
 const getPagination = require("../utils/pagination.js");
 
-const escapeRegex = (value) => String(value).replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
-const buildFilter = (query) => {
-  const filter = {};
-  const search = String(query.search || "").trim();
-  if (search) {
-    const expression = new RegExp(escapeRegex(search), "i");
-    filter.$or = [{ title: expression }, { question: expression }, { content: expression }, { problemStatement: expression }, { topic: expression }, { skills: expression }, { tags: expression }];
-  }
-  ["contentType", "category", "subCategory", "topic", "difficulty", "programmingLanguage", "source"].forEach((key) => {
-    if (query[key] && query[key] !== "all") filter[key] = query[key];
-  });
-  return filter;
+const allowedFields = ["question", "answer"];
+const pickQuestionAnswer = (body = {}) => Object.fromEntries(
+  allowedFields.map((field) => [field, typeof body[field] === "string" ? body[field].trim() : body[field]])
+);
+const validateQuestionAnswer = ({ question, answer }) => {
+  if (!question || !answer) throw new ApiError(400, "Question and answer are required.");
 };
-const sortFields = ["title", "category", "topic", "difficulty", "contentType", "createdAt", "updatedAt"];
-const contentText = (body) => [body.question, body.content, body.problemStatement].filter(Boolean).join(" ").trim();
+const escapeRegex = (value) => String(value).replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
 
 exports.createOCRInterviewQuestion = asyncHandler(async (req, res) => {
-  const sourceText = contentText(req.body);
-  if (sourceText && req.query.allowDuplicate !== "true") {
-    const similar = await OCRInterviewQuestion.find({ $or: [{ question: { $regex: escapeRegex(sourceText.slice(0, 120)), $options: "i" } }, { problemStatement: { $regex: escapeRegex(sourceText.slice(0, 120)), $options: "i" } }] }).limit(5);
-    if (similar.length) {
-      return res.status(409).json({ success: false, statusCode: 409, message: "Similar question already exists.", data: { matches: similar } });
-    }
+  const data = pickQuestionAnswer(req.body);
+  validateQuestionAnswer(data);
+  const duplicate = await OCRInterviewQuestion.findOne({ question: data.question, answer: data.answer });
+  if (duplicate && req.query.allowDuplicate !== "true") {
+    return res.status(409).json({ success: false, statusCode: 409, message: "This question and answer already exists.", data: { match: duplicate } });
   }
-  const doc = await OCRInterviewQuestion.create(req.body);
-  res.status(201).json(new ApiResponse(201, "OCR knowledge record created successfully", doc));
+  const doc = await OCRInterviewQuestion.create(data);
+  res.status(201).json(new ApiResponse(201, "Question-answer record created successfully", doc));
 });
 
 exports.getOCRInterviewQuestions = asyncHandler(async (req, res) => {
   const { page, limit, skip } = getPagination(req);
-  const filter = buildFilter(req.query);
-  const sortBy = sortFields.includes(req.query.sortBy) ? req.query.sortBy : "createdAt";
-  const sortOrder = req.query.sortOrder === "asc" ? 1 : -1;
-  const [docs, total] = await Promise.all([OCRInterviewQuestion.find(filter).sort({ [sortBy]: sortOrder }).skip(skip).limit(limit), OCRInterviewQuestion.countDocuments(filter)]);
-  res.status(200).json(new ApiResponse(200, "OCR knowledge records fetched successfully", { docs, total, page, limit, pages: Math.ceil(total / limit) }));
+  const search = String(req.query.search || "").trim();
+  const filter = search ? { $or: [{ question: { $regex: escapeRegex(search), $options: "i" } }, { answer: { $regex: escapeRegex(search), $options: "i" } }] } : {};
+  const [docs, total] = await Promise.all([
+    OCRInterviewQuestion.find(filter).sort({ createdAt: -1 }).skip(skip).limit(limit),
+    OCRInterviewQuestion.countDocuments(filter),
+  ]);
+  res.status(200).json(new ApiResponse(200, "Question-answer records fetched successfully", { docs, total, page, limit, pages: Math.ceil(total / limit) }));
 });
 
 exports.getOCRInterviewQuestion = asyncHandler(async (req, res) => {
   const doc = await OCRInterviewQuestion.findById(req.params.id);
-  if (!doc) throw new ApiError(404, "OCR knowledge record not found");
-  res.status(200).json(new ApiResponse(200, "OCR knowledge record fetched successfully", doc));
+  if (!doc) throw new ApiError(404, "Question-answer record not found");
+  res.status(200).json(new ApiResponse(200, "Question-answer record fetched successfully", doc));
 });
+
 exports.updateOCRInterviewQuestion = asyncHandler(async (req, res) => {
-  const doc = await OCRInterviewQuestion.findByIdAndUpdate(req.params.id, req.body, { new: true, runValidators: true });
-  if (!doc) throw new ApiError(404, "OCR knowledge record not found");
-  res.status(200).json(new ApiResponse(200, "OCR knowledge record updated successfully", doc));
+  const data = pickQuestionAnswer(req.body);
+  validateQuestionAnswer(data);
+  const doc = await OCRInterviewQuestion.findByIdAndUpdate(req.params.id, data, { new: true, runValidators: true, overwrite: true });
+  if (!doc) throw new ApiError(404, "Question-answer record not found");
+  res.status(200).json(new ApiResponse(200, "Question-answer record updated successfully", doc));
 });
+
 exports.deleteOCRInterviewQuestion = asyncHandler(async (req, res) => {
   const doc = await OCRInterviewQuestion.findByIdAndDelete(req.params.id);
-  if (!doc) throw new ApiError(404, "OCR knowledge record not found");
-  res.status(200).json(new ApiResponse(200, "OCR knowledge record deleted successfully", null));
+  if (!doc) throw new ApiError(404, "Question-answer record not found");
+  res.status(200).json(new ApiResponse(200, "Question-answer record deleted successfully", null));
 });
+
 exports.duplicateOCRInterviewQuestion = asyncHandler(async (req, res) => {
   const source = await OCRInterviewQuestion.findById(req.params.id).lean();
-  if (!source) throw new ApiError(404, "OCR knowledge record not found");
-  delete source._id; delete source.createdAt; delete source.updatedAt;
-  const duplicate = await OCRInterviewQuestion.create({ ...source, title: source.title ? `${source.title} (Copy)` : "Untitled Copy" });
-  res.status(201).json(new ApiResponse(201, "OCR knowledge record duplicated successfully", duplicate));
+  if (!source) throw new ApiError(404, "Question-answer record not found");
+  const duplicate = await OCRInterviewQuestion.create({ question: source.question, answer: source.answer });
+  res.status(201).json(new ApiResponse(201, "Question-answer record duplicated successfully", duplicate));
 });
