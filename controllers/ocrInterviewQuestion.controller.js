@@ -45,7 +45,7 @@ exports.getOCRInterviewQuestionIds = asyncHandler(async (req, res) => {
 });
 
 exports.bulkDeleteOCRInterviewQuestions = asyncHandler(async (req, res) => {
-  const ids = Array.isArray(req.body?.ids) ? [...new Set(req.body.ids.filter((id) => /^[a-f\\d]{24}$/i.test(String(id))))] : [];
+  const ids = Array.isArray(req.body?.ids) ? [...new Set(req.body.ids.filter((id) => /^[a-f\d]{24}$/i.test(String(id))))] : [];
   if (!ids.length) throw new ApiError(400, "Select at least one question-answer record");
   const result = await OCRInterviewQuestion.deleteMany({ _id: { $in: ids } });
   await Promise.all([
