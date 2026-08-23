@@ -35,7 +35,7 @@ exports.refreshAccessToken = asyncHandler(async (req, res) => {
   const refreshToken = req.cookies.refreshToken || req.body.refreshToken;
   const ipAddress = req.ip;
   const { admin, accessToken, newRefreshToken } = await authService.refreshAccessToken(refreshToken, ipAddress);
-  sendToken(admin, accessToken, newRefreshToken || refreshToken, res);
+  sendToken(res, admin, 200, "Token refreshed successfully", ipAddress, { accessToken, refreshToken: newRefreshToken || refreshToken });
 });
 
 exports.getMe = asyncHandler(async (req, res) => {

@@ -7,11 +7,12 @@ const sendToken = async (
   admin,
   statusCode = 200,
   message = "Success",
-  ip = ""
+  ip = "",
+  tokenOverrides = {}
 ) => {
-  const accessToken = generateAccessToken(admin);
+  const accessToken = tokenOverrides.accessToken || generateAccessToken(admin);
 
-  const refreshToken = await generateRefreshToken(admin, ip);
+  const refreshToken = tokenOverrides.refreshToken || await generateRefreshToken(admin, ip);
 
   const accessOptions = {
     httpOnly: true,
