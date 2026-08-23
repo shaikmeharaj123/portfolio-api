@@ -39,7 +39,8 @@ yarn-error.log*
 # typescript
 *.tsbuildinfo
 next-env.d.ts
-
+.env
+echo .env >> .gitignore
 
 # Ignore zip files
 *.zip
