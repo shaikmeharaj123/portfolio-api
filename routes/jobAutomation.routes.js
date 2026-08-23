@@ -1,0 +1,15 @@
+const { Router } = require("express");
+const auth = require("../middleware/auth.js");
+const { restrictTo } = require("../middleware/admin.js");
+const controller = require("../controllers/jobAutomation.controller.js");
+const router = Router();
+const protectedAdmin = [auth, restrictTo("super_admin", "admin")];
+router.get("/profile", ...protectedAdmin, controller.getProfile);
+router.put("/profile", ...protectedAdmin, controller.saveProfile);
+router.put("/preferences", ...protectedAdmin, controller.savePreferences);
+router.get("/matching-jobs", ...protectedAdmin, controller.getMatchingJobs);
+router.post("/matching-jobs", ...protectedAdmin, controller.createMatchingJob);
+router.post("/matching-jobs/:id/eligibility", ...protectedAdmin, controller.checkEligibility);
+router.patch("/queue/:id", ...protectedAdmin, controller.updateQueueItem);
+router.get("/stats", ...protectedAdmin, controller.getAutomationStats);
+module.exports = router;

@@ -1,0 +1,13 @@
+const { Router } = require("express");
+const auth = require("../middleware/auth.js");
+const { restrictTo } = require("../middleware/admin.js");
+const controller = require("../controllers/gmail.controller.js");
+const router = Router();
+const protectedAdmin = [auth, restrictTo("super_admin", "admin")];
+router.get("/connect", ...protectedAdmin, controller.connect);
+router.get("/callback", controller.callback);
+router.get("/status", ...protectedAdmin, controller.status);
+router.post("/sync", ...protectedAdmin, controller.sync);
+router.patch("/:id/primary", ...protectedAdmin, controller.setPrimary);
+router.post("/disconnect", ...protectedAdmin, controller.disconnect);
+module.exports = router;
