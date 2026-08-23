@@ -1,16 +1,8 @@
 const mongoose = require("mongoose");
 
-const CONTENT_TYPES = [
-  "interview-question",
-  "coding-question",
-  "concept",
-  "technical-note",
-  "general-note",
-  "reference",
-  "other",
-];
+const CONTENT_TYPES = ["interview-question", "coding-question"];
 const DIFFICULTIES = ["Easy", "Medium", "Hard"];
-const SOURCES = ["Book", "Camera OCR", "Image Upload", "PDF", "Manual Entry", "Interview", "Website", "Personal Notes", "Other"];
+const SOURCES = ["Book", "Camera OCR", "Image Upload", "PDF", "OCR", "Manual Entry", "Interview", "Website", "Personal Notes", "Other"];
 const PROGRAMMING_LANGUAGES = ["JavaScript"];
 
 const exampleSchema = new mongoose.Schema(
