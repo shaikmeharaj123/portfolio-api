@@ -86,6 +86,12 @@ const decrypt = (value) => {
     }
   }
 
+  console.warn("[GMAIL] Failed to decrypt stored token", {
+    hasValue: Boolean(value),
+    candidateCount: candidates.length,
+    error: lastError?.message || "Unknown decrypt error",
+  });
+
   throw new ApiError(
     401,
     "Stored Gmail credentials could not be decrypted. Reconnect Gmail to refresh the saved tokens.",
@@ -136,6 +142,11 @@ const exchangeCode = async (code) => {
 
 const refreshAccessToken = async (connection) => {
   const config = assertConfig();
+  console.log("[GMAIL] Refreshing access token", {
+    gmailAddress: connection.gmailAddress,
+    tokenExpiryDate: connection.tokenExpiryDate ? new Date(connection.tokenExpiryDate).toISOString() : null,
+  });
+
   const response = await fetch("https://oauth2.googleapis.com/token", {
     method: "POST",
     headers: { "Content-Type": "application/x-www-form-urlencoded" },
@@ -153,6 +164,12 @@ const refreshAccessToken = async (connection) => {
   connection.encryptedAccessToken = encrypt(data.access_token);
   connection.tokenExpiryDate = new Date(Date.now() + (data.expires_in || 3600) * 1000);
   await connection.save();
+
+  console.log("[GMAIL] Access token refreshed", {
+    gmailAddress: connection.gmailAddress,
+    expiresIn: data.expires_in || 3600,
+  });
+
   return data.access_token;
 };
 

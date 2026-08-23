@@ -2,6 +2,8 @@ const ApiResponse = require("./ApiResponse.js");
 const generateAccessToken = require("./generateAccessToken.js");
 const generateRefreshToken = require("./generateRefreshToken.js");
 
+const isProduction = process.env.NODE_ENV === "production";
+
 const sendToken = async (
   res,
   admin,
@@ -16,15 +18,15 @@ const sendToken = async (
 
   const accessOptions = {
     httpOnly: true,
-    secure: process.env.NODE_ENV === "production",
-    sameSite: "lax",
+    secure: isProduction,
+    sameSite: isProduction ? "none" : "lax",
     maxAge: 15 * 60 * 1000,
   };
 
   const refreshOptions = {
     httpOnly: true,
-    secure: process.env.NODE_ENV === "production",
-    sameSite: "lax",
+    secure: isProduction,
+    sameSite: isProduction ? "none" : "lax",
     maxAge: 7 * 24 * 60 * 60 * 1000,
   };
 

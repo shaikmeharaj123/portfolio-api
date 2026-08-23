@@ -19,6 +19,13 @@ const auth = async (req, res, next) => {
     }
 
     if (!token) {
+      console.warn("[AUTH] Missing token", {
+        method: req.method,
+        url: req.originalUrl,
+        hasAuthorizationHeader: Boolean(req.headers.authorization),
+        hasAccessTokenCookie: Boolean(req.cookies?.accessToken),
+      });
+
       return res.status(401).json({
         success: false,
         message: "Access denied. Token not found.",
