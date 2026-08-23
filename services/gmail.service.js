@@ -4,7 +4,7 @@ const GmailConnection = require("../models/GmailConnection.js");
 const ApiError = require("../utils/ApiError.js");
 
 const oauthConfig = () => ({ clientId: process.env.GOOGLE_CLIENT_ID, clientSecret: process.env.GOOGLE_CLIENT_SECRET, redirectUri: process.env.GOOGLE_REDIRECT_URI });
-const encryptionKey = () => { const value = process.env.GMAIL_TOKEN_ENCRYPTION_KEY; if (!value) throw new ApiError(500, "Gmail token encryption is not configured"); return crypto.createHash("sha256").update(value).digest(); };
+const encryptionKey = () => { const value = process.env.GMAIL_TOKEN_ENCRYPTION_KEY || process.env.JWT_SECRET; if (!value) throw new ApiError(500, "Gmail token encryption is not configured; set GMAIL_TOKEN_ENCRYPTION_KEY or JWT_SECRET"); return crypto.createHash("sha256").update(value).digest(); };
 const encrypt = (value) => { const iv = crypto.randomBytes(12); const cipher = crypto.createCipheriv("aes-256-gcm", encryptionKey(), iv); const encrypted = Buffer.concat([cipher.update(value, "utf8"), cipher.final()]); return `${iv.toString("base64url")}.${cipher.getAuthTag().toString("base64url")}.${encrypted.toString("base64url")}`; };
 const decrypt = (value) => { const [iv, tag, encrypted] = value.split('.'); const decipher = crypto.createDecipheriv("aes-256-gcm", encryptionKey(), Buffer.from(iv, "base64url")); decipher.setAuthTag(Buffer.from(tag, "base64url")); return Buffer.concat([decipher.update(Buffer.from(encrypted, "base64url")), decipher.final()]).toString("utf8"); };
 const assertConfig = () => { const config = oauthConfig(); if (!config.clientId || !config.clientSecret || !config.redirectUri) throw new ApiError(500, "Google OAuth is not configured"); return config; };
